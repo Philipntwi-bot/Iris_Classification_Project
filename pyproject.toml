@@ -1,2 +1,16 @@
+[project]
+name = "iris-classification"
+version = "1.0.0"
+requires-python = ">=3.10"
+dependencies = [
+    "joblib",
+    "numpy",
+    "scikit-learn",
+    "pandas"
+]
+
+[tool.uv]
+package = false
+
 [tool.vercel]
 entrypoint = "api.predict:handler"
