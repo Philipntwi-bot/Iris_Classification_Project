@@ -11,6 +11,3 @@ dependencies = [
 
 [tool.uv]
 package = false
-
-[tool.vercel]
-entrypoint = "api.predict:handler"
