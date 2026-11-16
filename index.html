@@ -930,21 +930,7 @@
             color: var(--text-secondary);
         }
 
-        /* Lecturer Defense Guide */
-        .defense-guide-card {
-            background: rgba(10, 15, 30, 0.7);
-            border: 1px solid rgba(56, 189, 248, 0.25);
-            border-radius: 20px;
-            padding: 26px;
-        }
-
-        .defense-qa {
-            background: rgba(15, 23, 42, 0.7);
-            border: 1px solid var(--border-subtle);
-            border-radius: 14px;
-            padding: 18px 22px;
-            margin-bottom: 16px;
-        }
+        
 
         .defense-q {
             font-family: 'Space Grotesk', sans-serif;
@@ -1257,8 +1243,7 @@
                 <button type="button" class="analytics-tab-btn active" onclick="switchAnalyticsTab('scatter')">📈 Interactive Scatter Plot</button>
                 <button type="button" class="analytics-tab-btn" onclick="switchAnalyticsTab('f1')">🎯 F1-Score & Metrics</button>
                 <button type="button" class="analytics-tab-btn" onclick="switchAnalyticsTab('cm')">🔢 Confusion Matrix</button>
-                <button type="button" class="analytics-tab-btn" onclick="switchAnalyticsTab('guide')">🎓 Lecturer Defense Guide</button>
-            </div>
+                </div>
         </div>
 
         <!-- VIEW 1: INTERACTIVE SCATTER PLOT (Sepal Length vs Sepal Width & Petal Length vs Petal Width) -->
@@ -1267,7 +1252,7 @@
                 <div class="scatter-toolbar">
                     <div class="scatter-mode-toggle">
                         <button type="button" class="scatter-mode-btn active" id="btnModeSepal" onclick="setScatterMode('sepal')">
-                            🌿 Sepal Length vs Sepal Width (Lecturer Focus)
+                            🌿 Sepal Length vs Sepal Width
                         </button>
                         <button type="button" class="scatter-mode-btn" id="btnModePetal" onclick="setScatterMode('petal')">
                             🌸 Petal Length vs Petal Width
@@ -1385,48 +1370,7 @@
             </div>
         </div>
 
-        <!-- VIEW 4: LECTURER ORAL DEFENSE GUIDE -->
-        <div id="view-guide" class="analytics-view">
-            <div class="defense-guide-card">
-                <h3 style="font-family: 'Space Grotesk', sans-serif; font-size: 20px; font-weight: 700; color: #38bdf8; margin-bottom: 16px;">
-                    🎓 Lecturer Defense Cheat Sheet: How to Answer Oral Questions
-                </h3>
-
-                <div class="defense-qa">
-                    <div class="defense-q">
-                        <span>❓ Question 1:</span> "What does 'Inference' mean in your web application?"
-                    </div>
-                    <div class="defense-a">
-                        <strong>Answer:</strong> "Sir/Madam, <em>Training</em> is the phase where the model learns the optimal weights from historical data. 
-                        <strong>Inference</strong> is the live operational phase where new, unlabelled measurements (Sepal Length, Sepal Width, Petal Length, Petal Width) 
-                        are fed into the trained model. Our API computes the dot product, applies the Softmax function, and infers the flower species and confidence probabilities in real-time (~14 ms)."
-                    </div>
-                </div>
-
-                <div class="defense-qa">
-                    <div class="defense-q">
-                        <span>❓ Question 2:</span> "Why did you plot Sepal Length against Sepal Width?"
-                    </div>
-                    <div class="defense-a">
-                        <strong>Answer:</strong> "Sir/Madam, Fisher's 1936 Iris benchmark contains four features. By plotting <strong>Sepal Length vs Sepal Width</strong>, 
-                        we visualize the two primary calyx dimensions. It clearly demonstrates that <em>Iris Setosa</em> forms an isolated, linearly separable cluster on the top-left, 
-                        whereas <em>Versicolor</em> and <em>Virginica</em> exhibit closer morphological boundaries that require Petal measurements to fully disambiguate."
-                    </div>
-                </div>
-
-                <div class="defense-qa">
-                    <div class="defense-q">
-                        <span>❓ Question 3:</span> "What is the F1-Score and why not just use Accuracy?"
-                    </div>
-                    <div class="defense-a">
-                        <strong>Answer:</strong> "Accuracy can be deceptively high if classes are imbalanced or if errors are skewed. 
-                        The <strong>F1-Score</strong> is the harmonic mean of Precision (avoiding false alarms) and Recall (avoiding missed detections). 
-                        Our model achieves an <strong>F1-Score of 0.97</strong> (1.00 for Setosa, 0.95 for Versicolor, 0.95 for Virginica), mathematically proving that the model performs with balanced, robust reliability across all three classes."
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
+        </section>
 
     <!-- Telemetry Cards -->
     <div class="telemetry-deck">
