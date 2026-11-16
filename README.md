@@ -3,7 +3,10 @@
 **Student:** Philip Antwi  
 **Programme:** BSc Information Technology  
 **Institution:** Pentecost University, Accra, Ghana  
-**Live Application:** [https://iris-classification-project-rk73.vercel.app/](https://iris-classification-project-rk73.vercel.app/)
+**Live Application:** [https://iris-classification-project-rk73.vercel.app/](https://iris-classification-project-rk73.vercel.app/)  
+**🚀 Edit Online (VS Code in Browser):** [https://github.dev/Philipntwi-bot/Iris_Classification_Project](https://github.dev/Philipntwi-bot/Iris_Classification_Project)  
+**🐙 GitHub Repository:** [https://github.com/Philipntwi-bot/Iris_Classification_Project](https://github.com/Philipntwi-bot/Iris_Classification_Project)  
+**☁️ Vercel Console:** [https://vercel.com/philipntwi-bot/iris-classification-project](https://vercel.com/philipntwi-bot/iris-classification-project)
 
 ---
 
