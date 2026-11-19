@@ -1,0 +1,2457 @@
+# -*- coding: utf-8 -*-
+"""
+Build Complete Pristine Iris Classification Web Application
+Includes:
+- Real authentic botanical photography (Setosa, Versicolor, Virginica, All Species comparison)
+- Live interactive inference with 4 sliders and zero-latency client math + server fallback
+- Interactive 2D scatter plot with 150 points and real-time live pulsing cursor
+- Interactive 3x3 Confusion Matrix grid with live hover calculation breakdown
+- Comprehensive metrics: F1-Score, Precision, Recall, Accuracy, Classification Report
+- Lecturer Oral Defense & Mathematical Theory Guide
+- 1-Click GitHub & Vercel navigation buttons
+- Student attribution: Philip Antwi | PUIT24120002 | Pentecost University Level 400
+"""
+
+import json
+import base64
+import os
+from pathlib import Path
+
+ROOT_DIR = Path(r"C:\Users\User\OneDrive\Desktop\MY IA FOR ARTIFICIAL INTELLIGENCE\Iris_Classification_Project")
+
+# Load model data
+with open(ROOT_DIR / "model_data.json", "r", encoding="utf-8") as f:
+    model_data = json.load(f)
+
+# Image Paths
+b64_setosa = "image/setosa.png"
+b64_versicolor = "image/versicolor.png"
+b64_virginica = "image/virginica.png"
+b64_all = "image/iris_species_all.png"
+cm_b64 = "confusion_matrix.png"
+fc_b64 = "feature_clustering.png"
+
+samples_json = json.dumps(model_data["samples"])
+coef_json = json.dumps(model_data["coef"])
+intercept_json = json.dumps(model_data["intercept"])
+species_stats_json = json.dumps(model_data["species_stats"])
+
+print("Data loaded. Generating HTML...")
+
+html_content = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEURAL-IRIS AI // Machine Learning Botanical Classifier</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <style>
+        :root {{
+            --bg-void: #030712;
+            --bg-surface: #0a0f1d;
+            --surface-card: rgba(15, 23, 42, 0.75);
+            --surface-elevated: rgba(30, 41, 59, 0.72);
+            --card-border: rgba(99, 102, 241, 0.28);
+            --border-subtle: rgba(255, 255, 255, 0.08);
+            --neon-cyan: #06b6d4;
+            --neon-teal: #14b8a6;
+            --neon-indigo: #6366f1;
+            --neon-violet: #8b5cf6;
+            --neon-purple: #a855f7;
+            --neon-rose: #ec4899;
+            --neon-pink: #f43f5e;
+            --neon-emerald: #10b981;
+            --neon-amber: #f59e0b;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+        }}
+
+        * {{
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+        }}
+
+        body {{
+            background-color: var(--bg-void);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+            padding-bottom: 70px;
+        }}
+
+        /* Interactive Particle Canvas */
+        #particleCanvas {{
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            opacity: 0.45;
+        }}
+
+        .glow-overlay {{
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 10% 20%, rgba(6, 182, 212, 0.12) 0%, transparent 40%),
+                radial-gradient(circle at 85% 75%, rgba(139, 92, 246, 0.14) 0%, transparent 45%),
+                radial-gradient(circle at 50% 50%, rgba(236, 72, 153, 0.08) 0%, transparent 55%);
+            pointer-events: none;
+            z-index: 1;
+        }}
+
+        .app-container {{
+            max-width: 1380px;
+            margin: 0 auto;
+            padding: 24px 28px;
+            position: relative;
+            z-index: 2;
+        }}
+
+        /* Top Nav Bar */
+        .top-navbar {{
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 24px;
+            background: rgba(15, 23, 42, 0.65);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-subtle);
+            border-radius: 20px;
+            margin-bottom: 28px;
+            gap: 16px;
+            flex-wrap: wrap;
+        }}
+
+        .brand-block {{
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }}
+
+        .brand-icon {{
+            width: 44px;
+            height: 44px;
+            background: linear-gradient(135deg, #06b6d4, #8b5cf6);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            box-shadow: 0 0 20px rgba(6, 182, 212, 0.4);
+        }}
+
+        .brand-info h1 {{
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 19px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }}
+
+        .brand-badge {{
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            font-weight: 700;
+            background: rgba(6, 182, 212, 0.15);
+            color: var(--neon-cyan);
+            border: 1px solid rgba(6, 182, 212, 0.35);
+            padding: 2px 7px;
+            border-radius: 6px;
+        }}
+
+        .brand-sub {{
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 2px;
+        }}
+
+        .author-badge {{
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(30, 41, 59, 0.6);
+            border: 1px solid rgba(99, 102, 241, 0.25);
+            padding: 8px 16px;
+            border-radius: 12px;
+            font-size: 12px;
+        }}
+
+        .author-dot {{
+            width: 8px;
+            height: 8px;
+            background: #10b981;
+            border-radius: 50%;
+            box-shadow: 0 0 10px #10b981;
+            animation: pulse 2s infinite;
+        }}
+
+        @keyframes pulse {{
+            0%, 100% {{ transform: scale(1); opacity: 1; }}
+            50% {{ transform: scale(1.3); opacity: 0.6; }}
+        }}
+
+        .nav-actions {{
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }}
+
+        .btn-nav {{
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 8px 14px;
+            border-radius: 10px;
+            font-size: 12px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.25s ease;
+            cursor: pointer;
+            border: 1px solid transparent;
+        }}
+
+        .btn-github {{
+            background: rgba(255, 255, 255, 0.08);
+            color: #fff;
+            border-color: rgba(255, 255, 255, 0.15);
+        }}
+        .btn-github:hover {{
+            background: rgba(255, 255, 255, 0.16);
+            transform: translateY(-2px);
+            border-color: rgba(255, 255, 255, 0.3);
+        }}
+
+        .btn-vercel {{
+            background: linear-gradient(135deg, rgba(6, 182, 212, 0.2), rgba(139, 92, 246, 0.25));
+            color: #38bdf8;
+            border-color: rgba(6, 182, 212, 0.4);
+        }}
+        .btn-vercel:hover {{
+            background: linear-gradient(135deg, rgba(6, 182, 212, 0.35), rgba(139, 92, 246, 0.4));
+            color: #fff;
+            transform: translateY(-2px);
+            box-shadow: 0 0 15px rgba(6, 182, 212, 0.3);
+        }}
+
+        .btn-console {{
+            background: rgba(139, 92, 246, 0.15);
+            color: #c084fc;
+            border-color: rgba(139, 92, 246, 0.35);
+        }}
+        .btn-console:hover {{
+            background: rgba(139, 92, 246, 0.25);
+            color: #fff;
+            transform: translateY(-2px);
+        }}
+
+        /* Hero Species Showcase (Bing query flower species integration) */
+        .showcase-header {{
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }}
+
+        .section-tag {{
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--neon-cyan);
+            font-weight: 700;
+        }}
+
+        .showcase-grid {{
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }}
+
+        @media (max-width: 980px) {{
+            .showcase-grid {{ grid-template-columns: 1fr; }}
+            .app-container {{ padding: 16px; }}
+        }}
+
+        .species-card {{
+            background: var(--surface-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 20px;
+            overflow: hidden;
+            backdrop-filter: blur(16px);
+            transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+        }}
+
+        .species-card:hover {{
+            transform: translateY(-5px);
+            border-color: rgba(99, 102, 241, 0.55);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6);
+        }}
+
+        .species-img-wrap {{
+            position: relative;
+            width: 100%;
+            height: 190px;
+            overflow: hidden;
+            background: #0f172a;
+        }}
+
+        .species-img {{
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.6s ease;
+        }}
+
+        .species-card:hover .species-img {{
+            transform: scale(1.08);
+        }}
+
+        .species-badge-top {{
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10.5px;
+            font-weight: 700;
+            padding: 4px 10px;
+            border-radius: 8px;
+            backdrop-filter: blur(10px);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }}
+
+        .badge-setosa {{
+            background: rgba(6, 182, 212, 0.85);
+            color: #030712;
+            box-shadow: 0 0 12px rgba(6, 182, 212, 0.5);
+        }}
+        .badge-versicolor {{
+            background: rgba(139, 92, 246, 0.85);
+            color: #fff;
+            box-shadow: 0 0 12px rgba(139, 92, 246, 0.5);
+        }}
+        .badge-virginica {{
+            background: rgba(236, 72, 153, 0.85);
+            color: #fff;
+            box-shadow: 0 0 12px rgba(236, 72, 153, 0.5);
+        }}
+
+        .species-content {{
+            padding: 20px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }}
+
+        .species-title-row {{
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            margin-bottom: 6px;
+        }}
+
+        .species-name {{
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 20px;
+            font-weight: 700;
+            color: #fff;
+        }}
+
+        .species-common {{
+            font-size: 12px;
+            color: var(--neon-cyan);
+            font-style: italic;
+        }}
+
+        .species-desc {{
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.55;
+            margin-bottom: 16px;
+            flex: 1;
+        }}
+
+        .species-ranges {{
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            background: rgba(0, 0, 0, 0.25);
+            padding: 10px 12px;
+            border-radius: 12px;
+            margin-bottom: 14px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            color: #cbd5e1;
+        }}
+
+        .range-item span {{
+            color: var(--text-muted);
+            display: block;
+            font-size: 9.5px;
+            text-transform: uppercase;
+        }}
+
+        .btn-preset-card {{
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            width: 100%;
+            padding: 9px;
+            border-radius: 10px;
+            font-size: 12px;
+            font-weight: 700;
+            border: 1px solid var(--border-subtle);
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.25s ease;
+        }}
+        .btn-preset-card:hover {{
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }}
+
+        /* Main Workspace: 2 Columns (Inputs & Live Results) */
+        .workspace-grid {{
+            display: grid;
+            grid-template-columns: 1.15fr 0.85fr;
+            gap: 24px;
+            margin-bottom: 32px;
+        }}
+
+        @media (max-width: 1050px) {{
+            .workspace-grid {{ grid-template-columns: 1fr; }}
+        }}
+
+        .card-panel {{
+            background: var(--surface-card);
+            border: 1px solid var(--card-border);
+            border-radius: 24px;
+            padding: 28px;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 20px 45px rgba(0, 0, 0, 0.4);
+            position: relative;
+        }}
+
+        .panel-header {{
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 22px;
+        }}
+
+        .panel-title {{
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 18px;
+            font-weight: 700;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }}
+
+        /* Quick Preset Chips */
+        .preset-chips-strip {{
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 24px;
+        }}
+
+        .preset-chip {{
+            padding: 7px 13px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-subtle);
+            border-radius: 999px;
+            font-size: 11.5px;
+            font-weight: 600;
+            color: #cbd5e1;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }}
+        .preset-chip:hover {{
+            background: rgba(6, 182, 212, 0.15);
+            border-color: rgba(6, 182, 212, 0.4);
+            color: #fff;
+            transform: translateY(-1px);
+        }}
+
+        /* Morphometric Sliders */
+        .sensors-grid {{
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px;
+            margin-bottom: 24px;
+        }}
+
+        @media (max-width: 600px) {{
+            .sensors-grid {{ grid-template-columns: 1fr; }}
+        }}
+
+        .sensor-box {{
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--border-subtle);
+            border-radius: 16px;
+            padding: 16px;
+            transition: border-color 0.25s ease;
+        }}
+        .sensor-box:focus-within {{
+            border-color: var(--neon-cyan);
+            box-shadow: 0 0 15px rgba(6, 182, 212, 0.15);
+        }}
+
+        .sensor-meta {{
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }}
+
+        .sensor-label {{
+            font-size: 13px;
+            font-weight: 600;
+            color: #e2e8f0;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }}
+
+        .sensor-hint {{
+            font-size: 10px;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+        }}
+
+        .sensor-num-input {{
+            width: 72px;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--border-subtle);
+            border-radius: 8px;
+            padding: 5px 8px;
+            color: var(--neon-cyan);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            font-weight: 700;
+            text-align: right;
+            outline: none;
+            transition: all 0.2s;
+        }}
+        .sensor-num-input:focus {{
+            border-color: var(--neon-cyan);
+            background: rgba(6, 182, 212, 0.1);
+        }}
+
+        /* Styled Range Slider */
+        .range-slider {{
+            -webkit-appearance: none;
+            width: 100%;
+            height: 6px;
+            background: #1e293b;
+            border-radius: 3px;
+            outline: none;
+            cursor: pointer;
+            margin: 8px 0;
+        }}
+        .range-slider::-webkit-slider-thumb {{
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #06b6d4, #8b5cf6);
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(6, 182, 212, 0.8);
+            border: 2px solid #fff;
+            transition: transform 0.15s ease;
+        }}
+        .range-slider::-webkit-slider-thumb:hover {{
+            transform: scale(1.25);
+        }}
+
+        .sensor-scale {{
+            display: flex;
+            justify-content: space-between;
+            font-size: 10px;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+        }}
+
+        /* Action Buttons */
+        .sensor-actions {{
+            display: flex;
+            gap: 12px;
+        }}
+
+        .btn-infer-main {{
+            flex: 1;
+            padding: 14px 20px;
+            background: linear-gradient(135deg, #06b6d4, #8b5cf6);
+            border: none;
+            border-radius: 14px;
+            color: #fff;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            box-shadow: 0 6px 20px rgba(6, 182, 212, 0.35);
+            transition: all 0.25s ease;
+        }}
+        .btn-infer-main:hover {{
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(6, 182, 212, 0.5);
+        }}
+
+        .btn-random {{
+            padding: 14px 18px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid var(--border-subtle);
+            border-radius: 14px;
+            color: #e2e8f0;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }}
+        .btn-random:hover {{
+            background: rgba(255, 255, 255, 0.12);
+            transform: translateY(-1px);
+        }}
+
+        /* Right Column: Prediction Stage */
+        .stage-card {{
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }}
+
+        .result-spotlight {{
+            background: rgba(10, 15, 29, 0.8);
+            border: 1px solid rgba(6, 182, 212, 0.3);
+            border-radius: 20px;
+            padding: 22px;
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 20px;
+            box-shadow: 0 0 35px rgba(6, 182, 212, 0.12);
+        }}
+
+        .spotlight-glow {{
+            position: absolute;
+            top: -40px;
+            right: -40px;
+            width: 140px;
+            height: 140px;
+            background: radial-gradient(circle, rgba(6, 182, 212, 0.3) 0%, transparent 70%);
+            pointer-events: none;
+        }}
+
+        .result-top-meta {{
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }}
+
+        .status-pill {{
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            color: var(--neon-emerald);
+            background: rgba(16, 185, 129, 0.12);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            padding: 3px 10px;
+            border-radius: 999px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }}
+
+        .result-hero {{
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            margin-bottom: 16px;
+        }}
+
+        .result-avatar-wrap {{
+            width: 80px;
+            height: 80px;
+            border-radius: 18px;
+            overflow: hidden;
+            border: 2px solid var(--neon-cyan);
+            box-shadow: 0 0 20px rgba(6, 182, 212, 0.4);
+            flex-shrink: 0;
+        }}
+
+        .result-avatar {{
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: all 0.3s;
+        }}
+
+        .result-details h2 {{
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 24px;
+            font-weight: 800;
+            color: #fff;
+            letter-spacing: -0.5px;
+            line-height: 1.2;
+        }}
+
+        .result-confidence {{
+            font-size: 13px;
+            color: var(--neon-cyan);
+            font-weight: 600;
+            margin-top: 4px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }}
+
+        .confidence-val {{
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 18px;
+            font-weight: 800;
+            color: #fff;
+        }}
+
+        /* Probability Bars */
+        .prob-section-title {{
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+        }}
+
+        .prob-rows {{
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 20px;
+        }}
+
+        .prob-row {{
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }}
+
+        .prob-header {{
+            display: flex;
+            justify-content: space-between;
+            font-size: 12.5px;
+            font-weight: 600;
+            color: #cbd5e1;
+        }}
+
+        .prob-track {{
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+        }}
+
+        .prob-fill {{
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+        }}
+
+        .fill-setosa {{
+            background: linear-gradient(90deg, #06b6d4, #22d3ee);
+            box-shadow: 0 0 10px rgba(6, 182, 212, 0.5);
+        }}
+        .fill-versicolor {{
+            background: linear-gradient(90deg, #8b5cf6, #a855f7);
+            box-shadow: 0 0 10px rgba(139, 92, 246, 0.5);
+        }}
+        .fill-virginica {{
+            background: linear-gradient(90deg, #ec4899, #f43f5e);
+            box-shadow: 0 0 10px rgba(236, 72, 153, 0.5);
+        }}
+
+        /* Telemetry Strip */
+        .telemetry-deck {{
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            background: rgba(0, 0, 0, 0.35);
+            padding: 14px;
+            border-radius: 14px;
+            border: 1px solid var(--border-subtle);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+        }}
+
+        .tele-item span {{
+            color: var(--text-muted);
+            font-size: 9.5px;
+            display: block;
+            text-transform: uppercase;
+        }}
+
+        .tele-item strong {{
+            color: #e2e8f0;
+            font-weight: 700;
+        }}
+
+        /* TABS DECK FOR VISUALIZATIONS & METRICS (GRFS) */
+        .analytics-deck {{
+            background: var(--surface-card);
+            border: 1px solid var(--card-border);
+            border-radius: 24px;
+            padding: 28px;
+            backdrop-filter: blur(20px);
+            margin-bottom: 32px;
+        }}
+
+        .tabs-header {{
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border-subtle);
+            padding-bottom: 16px;
+            margin-bottom: 24px;
+            gap: 12px;
+            flex-wrap: wrap;
+        }}
+
+        .tabs-group {{
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }}
+
+        .tab-btn {{
+            padding: 10px 18px;
+            background: transparent;
+            border: 1px solid transparent;
+            border-radius: 12px;
+            color: var(--text-secondary);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }}
+
+        .tab-btn:hover {{
+            color: #fff;
+            background: rgba(255, 255, 255, 0.05);
+        }}
+
+        .tab-btn.active {{
+            background: rgba(6, 182, 212, 0.15);
+            border-color: rgba(6, 182, 212, 0.35);
+            color: var(--neon-cyan);
+            font-weight: 700;
+        }}
+
+        .tab-content {{
+            display: none;
+        }}
+        .tab-content.active {{
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }}
+
+        @keyframes fadeIn {{
+            from {{ opacity: 0; transform: translateY(6px); }}
+            to {{ opacity: 1; transform: translateY(0); }}
+        }}
+
+        /* TAB 1: INTERACTIVE SCATTER PLOT */
+        .scatter-toolbar {{
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 18px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }}
+
+        .scatter-selectors {{
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }}
+
+        .btn-scatter-axis {{
+            padding: 7px 14px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-subtle);
+            border-radius: 8px;
+            color: #cbd5e1;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }}
+        .btn-scatter-axis.active {{
+            background: rgba(139, 92, 246, 0.2);
+            border-color: rgba(139, 92, 246, 0.5);
+            color: #c084fc;
+        }}
+
+        .scatter-legend {{
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            font-size: 12px;
+            font-family: 'JetBrains Mono', monospace;
+        }}
+
+        .legend-dot {{
+            width: 10px;
+            height: 10px;
+            display: inline-block;
+            border-radius: 50%;
+            margin-right: 5px;
+        }}
+
+        .dot-setosa {{ background: #06b6d4; box-shadow: 0 0 8px #06b6d4; }}
+        .dot-versicolor {{ background: #8b5cf6; box-shadow: 0 0 8px #8b5cf6; }}
+        .dot-virginica {{ background: #ec4899; box-shadow: 0 0 8px #ec4899; }}
+        .dot-live {{ background: #f59e0b; box-shadow: 0 0 10px #f59e0b; animation: pulse 1.5s infinite; }}
+
+        .canvas-container {{
+            width: 100%;
+            height: 480px;
+            background: #090d16;
+            border: 1px solid var(--border-subtle);
+            border-radius: 16px;
+            position: relative;
+            overflow: hidden;
+        }}
+
+        #scatterCanvas {{
+            width: 100%;
+            height: 100%;
+            display: block;
+        }}
+
+        .scatter-tooltip {{
+            position: absolute;
+            background: rgba(15, 23, 42, 0.95);
+            border: 1px solid var(--neon-cyan);
+            border-radius: 8px;
+            padding: 8px 12px;
+            font-size: 11px;
+            font-family: 'JetBrains Mono', monospace;
+            pointer-events: none;
+            display: none;
+            z-index: 10;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.6);
+        }}
+
+        /* TAB 2: INTERACTIVE CONFUSION MATRIX & CALCULATIONS */
+        .cm-layout-grid {{
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 28px;
+        }}
+
+        @media (max-width: 900px) {{
+            .cm-layout-grid {{ grid-template-columns: 1fr; }}
+        }}
+
+        .cm-interactive-card {{
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--border-subtle);
+            border-radius: 18px;
+            padding: 22px;
+        }}
+
+        .cm-table {{
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 6px;
+            margin: 18px 0;
+            font-family: 'Space Grotesk', sans-serif;
+            text-align: center;
+        }}
+
+        .cm-table th {{
+            font-size: 12px;
+            color: var(--text-muted);
+            padding: 8px;
+            font-weight: 600;
+        }}
+
+        .cm-cell {{
+            padding: 16px 12px;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            position: relative;
+        }}
+
+        .cm-cell:hover {{
+            transform: scale(1.06);
+            z-index: 2;
+        }}
+
+        .cell-tp {{
+            background: rgba(6, 182, 212, 0.25);
+            border: 1px solid rgba(6, 182, 212, 0.6);
+            color: #38bdf8;
+            box-shadow: inset 0 0 15px rgba(6, 182, 212, 0.2);
+        }}
+        .cell-tp:hover {{
+            background: rgba(6, 182, 212, 0.45);
+            box-shadow: 0 0 20px rgba(6, 182, 212, 0.5);
+        }}
+
+        .cell-err {{
+            background: rgba(244, 63, 94, 0.25);
+            border: 1px solid rgba(244, 63, 94, 0.6);
+            color: #fda4af;
+        }}
+        .cell-err:hover {{
+            background: rgba(244, 63, 94, 0.45);
+            box-shadow: 0 0 20px rgba(244, 63, 94, 0.5);
+        }}
+
+        .cell-zero {{
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            color: var(--text-muted);
+        }}
+
+        .cell-tag {{
+            display: block;
+            font-size: 10px;
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 500;
+            opacity: 0.8;
+            margin-top: 2px;
+        }}
+
+        .cm-inspector {{
+            background: rgba(0, 0, 0, 0.35);
+            border: 1px solid var(--border-subtle);
+            border-radius: 12px;
+            padding: 14px 16px;
+            font-size: 12.5px;
+            line-height: 1.5;
+            color: #cbd5e1;
+        }}
+
+        /* Step-by-Step Calculation Box */
+        .calc-step-box {{
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--border-subtle);
+            border-radius: 18px;
+            padding: 22px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }}
+
+        .formula-card {{
+            background: rgba(0, 0, 0, 0.4);
+            border-left: 3px solid var(--neon-cyan);
+            padding: 12px 16px;
+            border-radius: 0 10px 10px 0;
+            font-family: 'JetBrains Mono', monospace;
+        }}
+
+        .formula-card h4 {{
+            font-size: 12px;
+            color: var(--neon-cyan);
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }}
+
+        .formula-card .math {{
+            font-size: 13px;
+            color: #f8fafc;
+            font-weight: 600;
+        }}
+
+        .formula-card .plugged {{
+            font-size: 11.5px;
+            color: #94a3b8;
+            margin-top: 4px;
+        }}
+
+        /* Full Metrics Table */
+        .metrics-table {{
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12.5px;
+            margin-top: 10px;
+        }}
+
+        .metrics-table th {{
+            text-align: left;
+            padding: 8px 12px;
+            color: var(--text-muted);
+            border-bottom: 1px solid var(--border-subtle);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            text-transform: uppercase;
+        }}
+
+        .metrics-table td {{
+            padding: 10px 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            color: #e2e8f0;
+        }}
+
+        .metrics-table tr:hover td {{
+            background: rgba(255, 255, 255, 0.03);
+        }}
+
+        /* TAB 3: GENERATED CHARTS & IMAGES */
+        .gallery-grid {{
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }}
+
+        @media (max-width: 800px) {{
+            .gallery-grid {{ grid-template-columns: 1fr; }}
+        }}
+
+        .gallery-item {{
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--border-subtle);
+            border-radius: 16px;
+            overflow: hidden;
+            transition: transform 0.3s;
+        }}
+
+        .gallery-item:hover {{
+            transform: translateY(-3px);
+            border-color: rgba(6, 182, 212, 0.4);
+        }}
+
+        .gallery-img {{
+            width: 100%;
+            height: auto;
+            display: block;
+        }}
+
+        .gallery-cap {{
+            padding: 14px 16px;
+            font-size: 12.5px;
+            color: #94a3b8;
+            line-height: 1.5;
+        }}
+
+        /* TAB 4: LECTURER ORAL DEFENSE */
+        .defense-container {{
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }}
+
+        .defense-card {{
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--border-subtle);
+            border-radius: 16px;
+            padding: 20px;
+            transition: all 0.2s ease;
+        }}
+
+        .defense-card:hover {{
+            border-color: rgba(99, 102, 241, 0.4);
+            background: rgba(30, 41, 59, 0.4);
+        }}
+
+        .defense-q {{
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 16px;
+            font-weight: 700;
+            color: #38bdf8;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }}
+
+        .defense-a {{
+            font-size: 13.5px;
+            color: #cbd5e1;
+            line-height: 1.6;
+        }}
+
+        /* Footer */
+        .app-footer {{
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px 24px;
+            background: rgba(15, 23, 42, 0.4);
+            border-top: 1px solid var(--border-subtle);
+            border-radius: 16px;
+            margin-top: 36px;
+            flex-wrap: wrap;
+            gap: 12px;
+            font-size: 12.5px;
+            color: var(--text-muted);
+        }}
+
+        .footer-links {{
+            display: flex;
+            gap: 16px;
+        }}
+
+        .footer-links a {{
+            color: var(--neon-cyan);
+            text-decoration: none;
+            transition: color 0.2s;
+        }}
+        .footer-links a:hover {{
+            color: #fff;
+            text-decoration: underline;
+        }}
+
+        /* Modal for Image Preview */
+        .modal-overlay {{
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(10px);
+            z-index: 100;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }}
+
+        .modal-card {{
+            background: #0f172a;
+            border: 1px solid var(--neon-cyan);
+            border-radius: 20px;
+            max-width: 900px;
+            width: 100%;
+            overflow: hidden;
+            box-shadow: 0 0 50px rgba(6, 182, 212, 0.3);
+            animation: zoomIn 0.25s ease;
+        }}
+
+        @keyframes zoomIn {{
+            from {{ transform: scale(0.92); opacity: 0; }}
+            to {{ transform: scale(1); opacity: 1; }}
+        }}
+
+        .modal-header {{
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border-subtle);
+        }}
+
+        .modal-close {{
+            background: transparent;
+            border: none;
+            color: #94a3b8;
+            font-size: 24px;
+            cursor: pointer;
+            line-height: 1;
+        }}
+        .modal-close:hover {{ color: #fff; }}
+
+        .modal-body img {{
+            width: 100%;
+            height: auto;
+            display: block;
+        }}
+    </style>
+</head>
+<body>
+
+    <!-- Particle Backdrop Canvas -->
+    <canvas id="particleCanvas"></canvas>
+    <div class="glow-overlay"></div>
+
+    <div class="app-container">
+
+        <!-- Top Navigation Bar -->
+        <header class="top-navbar">
+            <div class="brand-block">
+                <div class="brand-icon">🌺</div>
+                <div class="brand-info">
+                    <h1>
+                        NEURAL-IRIS AI 
+                        <span class="brand-badge">PROD V3.0</span>
+                    </h1>
+                    <div class="brand-sub">Machine Learning Botanical Classifier & Morphometric Sensor Telemetry</div>
+                </div>
+            </div>
+
+            <!-- Student Accreditation Badge -->
+            <div class="author-badge">
+                <span class="author-dot"></span>
+                <span><strong>Philip Antwi</strong> // PUIT24120002 // Level 400 BSc IT // Pentecost University</span>
+            </div>
+
+            <!-- Direct 1-Click Action Buttons -->
+            <div class="nav-actions">
+                <a href="https://github.com/Philipntwi-bot/Iris_Classification_Project" target="_blank" class="btn-nav btn-github" title="Visit GitHub Repository">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+                    </svg>
+                    GITHUB REPO
+                </a>
+                <a href="https://iris-classification-project.vercel.app" target="_blank" class="btn-nav btn-vercel" title="Live Vercel Production Deployment">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M24 22.525H0l12-21.05 12 21.05z"/>
+                    </svg>
+                    VERCEL APP
+                </a>
+                <a href="https://vercel.com/philipntwi-bot/iris-classification-project" target="_blank" class="btn-nav btn-console" title="Vercel Project Dashboard">
+                    ☁️ VERCEL CONSOLE
+                </a>
+            </div>
+        </header>
+
+        <!-- Flower Species Botanical Showcase (With Authentic Real High-Res Photos) -->
+        <div class="showcase-header">
+            <div>
+                <span class="section-tag">// BOTANICAL TAXONOMY & GROUND TRUTH</span>
+                <h3 style="font-family: 'Space Grotesk', sans-serif; font-size: 20px; font-weight: 700; color: #fff; margin-top: 4px;">
+                    Select Species to Test Inference Or Compare Morphometrics
+                </h3>
+            </div>
+            <button class="btn-nav btn-github" onclick="openModal('modalAllSpecies')" style="font-size: 11.5px;">
+                🔍 View Morphological Anatomy Chart
+            </button>
+        </div>
+
+        <div class="showcase-grid">
+            <!-- Setosa Card -->
+            <div class="species-card" onclick="applyPreset(5.0, 3.4, 1.5, 0.2)">
+                <div class="species-img-wrap">
+                    <img src="{b64_setosa}" alt="Iris Setosa" class="species-img" onerror="this.src='image/setosa.png'">
+                    <span class="species-badge-top badge-setosa">Class 0 // 100% Separable</span>
+                </div>
+                <div class="species-content">
+                    <div class="species-title-row">
+                        <span class="species-name">Iris setosa</span>
+                        <span class="species-common">Arctic Iris</span>
+                    </div>
+                    <p class="species-desc">
+                        Identified by short, delicate petals paired with broad sepals having prominent yellow veins at the base. Forms a distinct, perfectly linearly separable cluster.
+                    </p>
+                    <div class="species-ranges">
+                        <div class="range-item"><span>Petal Length:</span> 1.0 – 1.9 cm</div>
+                        <div class="range-item"><span>Petal Width:</span> 0.1 – 0.6 cm</div>
+                        <div class="range-item"><span>Sepal Length:</span> 4.3 – 5.8 cm</div>
+                        <div class="range-item"><span>Sepal Width:</span> 2.3 – 4.4 cm</div>
+                    </div>
+                    <button type="button" class="btn-preset-card">
+                        ⚡ Load Typical Setosa (5.0, 3.4, 1.5, 0.2)
+                    </button>
+                </div>
+            </div>
+
+            <!-- Versicolor Card -->
+            <div class="species-card" onclick="applyPreset(5.9, 2.8, 4.2, 1.3)">
+                <div class="species-img-wrap">
+                    <img src="{b64_versicolor}" alt="Iris Versicolor" class="species-img" onerror="this.src='image/versicolor.png'">
+                    <span class="species-badge-top badge-versicolor">Class 1 // Intermediate</span>
+                </div>
+                <div class="species-content">
+                    <div class="species-title-row">
+                        <span class="species-name">Iris versicolor</span>
+                        <span class="species-common">Blue Flag</span>
+                    </div>
+                    <p class="species-desc">
+                        Features violet-blue petals with darker purple veins and yellow-white blotches on the sepals. Shares an intermediate decision boundary with Virginica.
+                    </p>
+                    <div class="species-ranges">
+                        <div class="range-item"><span>Petal Length:</span> 3.0 – 5.1 cm</div>
+                        <div class="range-item"><span>Petal Width:</span> 1.0 – 1.8 cm</div>
+                        <div class="range-item"><span>Sepal Length:</span> 4.9 – 7.0 cm</div>
+                        <div class="range-item"><span>Sepal Width:</span> 2.0 – 3.4 cm</div>
+                    </div>
+                    <button type="button" class="btn-preset-card">
+                        ⚡ Load Typical Versicolor (5.9, 2.8, 4.2, 1.3)
+                    </button>
+                </div>
+            </div>
+
+            <!-- Virginica Card -->
+            <div class="species-card" onclick="applyPreset(6.5, 3.0, 5.5, 2.0)">
+                <div class="species-img-wrap">
+                    <img src="{b64_virginica}" alt="Iris Virginica" class="species-img" onerror="this.src='image/virginica.png'">
+                    <span class="species-badge-top badge-virginica">Class 2 // Robust</span>
+                </div>
+                <div class="species-content">
+                    <div class="species-title-row">
+                        <span class="species-name">Iris virginica</span>
+                        <span class="species-common">Southern Blue Flag</span>
+                    </div>
+                    <p class="species-desc">
+                        Displays elongated, robust petals and deep violet sepals with a bright golden hairy crest. Represents the largest morphological flower in the dataset.
+                    </p>
+                    <div class="species-ranges">
+                        <div class="range-item"><span>Petal Length:</span> 4.5 – 6.9 cm</div>
+                        <div class="range-item"><span>Petal Width:</span> 1.4 – 2.5 cm</div>
+                        <div class="range-item"><span>Sepal Length:</span> 4.9 – 7.9 cm</div>
+                        <div class="range-item"><span>Sepal Width:</span> 2.2 – 3.8 cm</div>
+                    </div>
+                    <button type="button" class="btn-preset-card">
+                        ⚡ Load Typical Virginica (6.5, 3.0, 5.5, 2.0)
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Workspace: Sliders & Instant Real-Time Inference -->
+        <div class="workspace-grid">
+
+            <!-- Left: Morphometric Feature Sliders -->
+            <div class="card-panel">
+                <div class="panel-header">
+                    <div class="panel-title">
+                        <span>⚡ Morphometric Feature Sensors</span>
+                    </div>
+                    <span class="section-tag">INPUT TENSOR [4×1]</span>
+                </div>
+
+                <!-- Quick Presets -->
+                <div class="preset-chips-strip">
+                    <span style="font-size: 11px; color: var(--text-muted); align-self: center; font-family: 'JetBrains Mono', monospace;">PRESETS:</span>
+                    <button class="preset-chip" onclick="applyPreset(5.0, 3.5, 1.4, 0.2)">🌿 Typical Setosa</button>
+                    <button class="preset-chip" onclick="applyPreset(5.9, 2.8, 4.2, 1.3)">🌼 Typical Versicolor</button>
+                    <button class="preset-chip" onclick="applyPreset(6.5, 3.0, 5.5, 2.0)">🌺 Typical Virginica</button>
+                    <button class="preset-chip" onclick="applyPreset(6.0, 3.0, 4.8, 1.8)">⚖️ Borderline Margin</button>
+                </div>
+
+                <!-- 4 Feature Sensors -->
+                <div class="sensors-grid">
+                    <!-- Sepal Length -->
+                    <div class="sensor-box">
+                        <div class="sensor-meta">
+                            <div>
+                                <div class="sensor-label">🍃 Sepal Length</div>
+                                <div class="sensor-hint">Outer protective calyx</div>
+                            </div>
+                            <input type="number" id="input_sl" class="sensor-num-input" value="5.8" min="4.0" max="8.0" step="0.1">
+                        </div>
+                        <input type="range" id="slider_sl" class="range-slider" value="5.8" min="4.0" max="8.0" step="0.1">
+                        <div class="sensor-scale">
+                            <span>4.0 cm</span>
+                            <span id="display_sl" style="color: var(--neon-cyan); font-weight:700;">5.8 cm</span>
+                            <span>8.0 cm</span>
+                        </div>
+                    </div>
+
+                    <!-- Sepal Width -->
+                    <div class="sensor-box">
+                        <div class="sensor-meta">
+                            <div>
+                                <div class="sensor-label">🍃 Sepal Width</div>
+                                <div class="sensor-hint">Calyx breadth</div>
+                            </div>
+                            <input type="number" id="input_sw" class="sensor-num-input" value="3.0" min="2.0" max="4.5" step="0.1">
+                        </div>
+                        <input type="range" id="slider_sw" class="range-slider" value="3.0" min="2.0" max="4.5" step="0.1">
+                        <div class="sensor-scale">
+                            <span>2.0 cm</span>
+                            <span id="display_sw" style="color: var(--neon-cyan); font-weight:700;">3.0 cm</span>
+                            <span>4.5 cm</span>
+                        </div>
+                    </div>
+
+                    <!-- Petal Length -->
+                    <div class="sensor-box">
+                        <div class="sensor-meta">
+                            <div>
+                                <div class="sensor-label">🌸 Petal Length</div>
+                                <div class="sensor-hint">Inner corolla standard</div>
+                            </div>
+                            <input type="number" id="input_pl" class="sensor-num-input" value="4.3" min="1.0" max="7.0" step="0.1">
+                        </div>
+                        <input type="range" id="slider_pl" class="range-slider" value="4.3" min="1.0" max="7.0" step="0.1">
+                        <div class="sensor-scale">
+                            <span>1.0 cm</span>
+                            <span id="display_pl" style="color: var(--neon-violet); font-weight:700;">4.3 cm</span>
+                            <span>7.0 cm</span>
+                        </div>
+                    </div>
+
+                    <!-- Petal Width -->
+                    <div class="sensor-box">
+                        <div class="sensor-meta">
+                            <div>
+                                <div class="sensor-label">🌸 Petal Width</div>
+                                <div class="sensor-hint">Corolla breadth (Key Split)</div>
+                            </div>
+                            <input type="number" id="input_pw" class="sensor-num-input" value="1.3" min="0.1" max="2.6" step="0.1">
+                        </div>
+                        <input type="range" id="slider_pw" class="range-slider" value="1.3" min="0.1" max="2.6" step="0.1">
+                        <div class="sensor-scale">
+                            <span>0.1 cm</span>
+                            <span id="display_pw" style="color: var(--neon-violet); font-weight:700;">1.3 cm</span>
+                            <span>2.6 cm</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="sensor-actions">
+                    <button type="button" class="btn-infer-main" onclick="triggerInference(true)">
+                        <span>⚡ LIVE INFERENCE TELEMETRY</span>
+                    </button>
+                    <button type="button" class="btn-random" onclick="loadRandomSample()">
+                        🎲 Random Real Sample
+                    </button>
+                </div>
+            </div>
+
+            <!-- Right: Live Prediction Stage -->
+            <div class="card-panel stage-card">
+                <div class="panel-header">
+                    <div class="panel-title">
+                        <span>🎯 Real-Time Classification Stage</span>
+                    </div>
+                    <span class="status-pill">
+                        <span class="author-dot"></span> LIVE EDGE + API
+                    </span>
+                </div>
+
+                <!-- Result Spotlight Banner -->
+                <div class="result-spotlight">
+                    <div class="spotlight-glow"></div>
+                    <div class="result-top-meta">
+                        <span class="section-tag">// CLASSIFICATION OUTCOME</span>
+                        <span id="predLatency" style="font-family:'JetBrains Mono', monospace; font-size:11px; color:var(--text-muted);">Latency: 0.12 ms</span>
+                    </div>
+
+                    <div class="result-hero">
+                        <div class="result-avatar-wrap">
+                            <img id="resultPhoto" src="{b64_versicolor}" alt="Predicted Species" class="result-avatar" onerror="this.src='image/versicolor.png'">
+                        </div>
+                        <div class="result-details">
+                            <h2 id="resultSpeciesName">IRIS VERSICOLOR</h2>
+                            <div class="result-confidence">
+                                <span>Model Confidence:</span>
+                                <span id="resultConfidenceScore" class="confidence-val">96.8%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <p id="resultSpeciesNote" style="font-size:12.5px; color:#94a3b8; line-height:1.5;">
+                        Intermediate petal morphology located between Setosa and Virginica boundaries.
+                    </p>
+                </div>
+
+                <!-- Probability Distribution Bars -->
+                <div class="prob-section-title">Softmax Probability Distribution Across 3 Species</div>
+                <div class="prob-rows">
+                    <!-- Setosa Row -->
+                    <div class="prob-row">
+                        <div class="prob-header">
+                            <span>🌺 Iris Setosa</span>
+                            <span id="probValSetosa" style="font-family:'JetBrains Mono', monospace;">0.1%</span>
+                        </div>
+                        <div class="prob-track">
+                            <div id="probFillSetosa" class="prob-fill fill-setosa" style="width: 0.1%;"></div>
+                        </div>
+                    </div>
+
+                    <!-- Versicolor Row -->
+                    <div class="prob-row">
+                        <div class="prob-header">
+                            <span>🌼 Iris Versicolor</span>
+                            <span id="probValVersicolor" style="font-family:'JetBrains Mono', monospace;">96.8%</span>
+                        </div>
+                        <div class="prob-track">
+                            <div id="probFillVersicolor" class="prob-fill fill-versicolor" style="width: 96.8%;"></div>
+                        </div>
+                    </div>
+
+                    <!-- Virginica Row -->
+                    <div class="prob-row">
+                        <div class="prob-header">
+                            <span>🌸 Iris Virginica</span>
+                            <span id="probValVirginica" style="font-family:'JetBrains Mono', monospace;">3.1%</span>
+                        </div>
+                        <div class="prob-track">
+                            <div id="probFillVirginica" class="prob-fill fill-virginica" style="width: 3.1%;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Telemetry Deck -->
+                <div class="telemetry-deck">
+                    <div class="tele-item">
+                        <span>Algorithm:</span>
+                        <strong>Multinomial Logistic (L-BFGS)</strong>
+                    </div>
+                    <div class="tele-item">
+                        <span>Test Accuracy:</span>
+                        <strong style="color: var(--neon-emerald);">96.67% (29/30)</strong>
+                    </div>
+                    <div class="tele-item">
+                        <span>Class F1-Score:</span>
+                        <strong id="teleClassF1" style="color: var(--neon-cyan);">0.95 (95%)</strong>
+                    </div>
+                    <div class="tele-item">
+                        <span>Current Tensor:</span>
+                        <strong id="teleTensor">[5.8, 3.0, 4.3, 1.3]</strong>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Visualizations, Confusion Matrix & Metrics Deck (GRFS) -->
+        <div class="analytics-deck">
+            <div class="tabs-header">
+                <div>
+                    <span class="section-tag">// GRAPHS, METRICS & EVALUATION SUITE</span>
+                    <h3 style="font-family: 'Space Grotesk', sans-serif; font-size: 19px; font-weight: 700; color: #fff; margin-top: 4px;">
+                        Interactive Visual Analysis & Exact Mathematical Metrics
+                    </h3>
+                </div>
+
+                <div class="tabs-group">
+                    <button class="tab-btn active" onclick="switchTab('tabScatter')">
+                        📈 Interactive Scatter Plot
+                    </button>
+                    <button class="tab-btn" onclick="switchTab('tabMatrix')">
+                        🔢 Confusion Matrix & Math
+                    </button>
+                    <button class="tab-btn" onclick="switchTab('tabCharts')">
+                        📊 High-Res Dark Charts
+                    </button>
+                    <button class="tab-btn" onclick="switchTab('tabDefense')">
+                        🎓 Oral Defense Guide
+                    </button>
+                </div>
+            </div>
+
+            <!-- TAB 1: INTERACTIVE 2D SCATTER PLOT -->
+            <div id="tabScatter" class="tab-content active">
+                <div class="scatter-toolbar">
+                    <div class="scatter-selectors">
+                        <button class="btn-scatter-axis active" id="btnAxisSepal" onclick="setScatterAxes('sepal')">
+                            🌿 Sepal Length vs Sepal Width
+                        </button>
+                        <button class="btn-scatter-axis" id="btnAxisPetal" onclick="setScatterAxes('petal')">
+                            🌸 Petal Length vs Petal Width (Linear Separation)
+                        </button>
+                        <button class="btn-scatter-axis" id="btnAxisCombo" onclick="setScatterAxes('combo')">
+                            📐 Petal Length vs Sepal Length
+                        </button>
+                    </div>
+
+                    <div class="scatter-legend">
+                        <span><span class="legend-dot dot-setosa"></span>Setosa (50)</span>
+                        <span><span class="legend-dot dot-versicolor"></span>Versicolor (50)</span>
+                        <span><span class="legend-dot dot-virginica"></span>Virginica (50)</span>
+                        <span><span class="legend-dot dot-live"></span><strong>🎯 Current Live Input</strong></span>
+                    </div>
+                </div>
+
+                <div class="canvas-container">
+                    <canvas id="scatterCanvas"></canvas>
+                    <div id="scatterTooltip" class="scatter-tooltip"></div>
+                </div>
+
+                <div style="margin-top: 14px; font-size: 12.5px; color: #94a3b8; line-height: 1.5;">
+                    💡 <strong>Live Dynamic Tracking:</strong> As you adjust the sliders above, the glowing amber target (<span style="color:#f59e0b; font-weight:700;">🎯</span>) moves in real time across the feature space! Observe how <em>Iris setosa</em> forms a completely isolated, linearly separable cluster, whereas <em>versicolor</em> and <em>virginica</em> form adjacent clusters with a narrow classification margin.
+                </div>
+            </div>
+
+            <!-- TAB 2: INTERACTIVE CONFUSION MATRIX & LIVE MATH -->
+            <div id="tabMatrix" class="tab-content">
+                <div class="cm-layout-grid">
+                    
+                    <!-- Left: Interactive 3x3 Grid -->
+                    <div class="cm-interactive-card">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                            <h4 style="font-family:'Space Grotesk', sans-serif; font-size:16px; color:#fff;">
+                                Interactive 3×3 Confusion Matrix (30 Test Samples)
+                            </h4>
+                            <span class="section-tag" style="color:var(--neon-emerald);">29 / 30 CORRECT</span>
+                        </div>
+                        <p style="font-size:12.5px; color:#94a3b8; line-height:1.5;">
+                            Click or hover any cell below to inspect True Positives (TP), False Positives (FP), and False Negatives (FN).
+                        </p>
+
+                        <table class="cm-table">
+                            <thead>
+                                <tr>
+                                    <th></th>
+                                    <th>Pred. Setosa</th>
+                                    <th>Pred. Versicolor</th>
+                                    <th>Pred. Virginica</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <th style="text-align:right;">Actual Setosa</th>
+                                    <td class="cm-cell cell-tp" onmouseover="inspectCell('setosa', 'setosa', 10, 'TP')" onclick="inspectCell('setosa', 'setosa', 10, 'TP')">
+                                        10
+                                        <span class="cell-tag">TP (100%)</span>
+                                    </td>
+                                    <td class="cm-cell cell-zero" onmouseover="inspectCell('setosa', 'versicolor', 0, 'Zero')" onclick="inspectCell('setosa', 'versicolor', 0, 'Zero')">
+                                        0
+                                        <span class="cell-tag">0%</span>
+                                    </td>
+                                    <td class="cm-cell cell-zero" onmouseover="inspectCell('setosa', 'virginica', 0, 'Zero')" onclick="inspectCell('setosa', 'virginica', 0, 'Zero')">
+                                        0
+                                        <span class="cell-tag">0%</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th style="text-align:right;">Actual Versicolor</th>
+                                    <td class="cm-cell cell-zero" onmouseover="inspectCell('versicolor', 'setosa', 0, 'Zero')" onclick="inspectCell('versicolor', 'setosa', 0, 'Zero')">
+                                        0
+                                        <span class="cell-tag">0%</span>
+                                    </td>
+                                    <td class="cm-cell cell-tp" onmouseover="inspectCell('versicolor', 'versicolor', 9, 'TP')" onclick="inspectCell('versicolor', 'versicolor', 9, 'TP')">
+                                        9
+                                        <span class="cell-tag">TP (90%)</span>
+                                    </td>
+                                    <td class="cm-cell cell-err" onmouseover="inspectCell('versicolor', 'virginica', 1, 'FP_FN')" onclick="inspectCell('versicolor', 'virginica', 1, 'FP_FN')">
+                                        1
+                                        <span class="cell-tag">Err (10%)</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th style="text-align:right;">Actual Virginica</th>
+                                    <td class="cm-cell cell-zero" onmouseover="inspectCell('virginica', 'setosa', 0, 'Zero')" onclick="inspectCell('virginica', 'setosa', 0, 'Zero')">
+                                        0
+                                        <span class="cell-tag">0%</span>
+                                    </td>
+                                    <td class="cm-cell cell-zero" onmouseover="inspectCell('virginica', 'versicolor', 0, 'Zero')" onclick="inspectCell('virginica', 'versicolor', 0, 'Zero')">
+                                        0
+                                        <span class="cell-tag">0%</span>
+                                    </td>
+                                    <td class="cm-cell cell-tp" onmouseover="inspectCell('virginica', 'virginica', 10, 'TP')" onclick="inspectCell('virginica', 'virginica', 10, 'TP')">
+                                        10
+                                        <span class="cell-tag">TP (100%)</span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <div id="cellInspector" class="cm-inspector">
+                            👉 <strong>Cell Inspection:</strong> Hover or click any cell above to see detailed breakdown and mathematical contribution to Precision, Recall, and F1.
+                        </div>
+                    </div>
+
+                    <!-- Right: Step-by-Step Calculation Walkthrough -->
+                    <div class="calc-step-box">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <h4 style="font-family:'Space Grotesk', sans-serif; font-size:16px; color:#fff;">
+                                📐 Mathematical Metric Derivations
+                            </h4>
+                            <span class="section-tag">HARMONIC MEAN</span>
+                        </div>
+
+                        <!-- Precision Formula -->
+                        <div class="formula-card">
+                            <h4>1. Precision (Exactness)</h4>
+                            <div class="math">Precision = TP / (TP + FP)</div>
+                            <div class="plugged">
+                                Setosa: 10/(10+0) = <strong>1.00 (100%)</strong> | Versicolor: 9/(9+0) = <strong>1.00 (100%)</strong> | Virginica: 10/(10+1) = <strong>0.909 (91%)</strong>
+                            </div>
+                        </div>
+
+                        <!-- Recall Formula -->
+                        <div class="formula-card" style="border-left-color: var(--neon-emerald);">
+                            <h4 style="color: var(--neon-emerald);">2. Recall (Sensitivity / Completeness)</h4>
+                            <div class="math">Recall = TP / (TP + FN)</div>
+                            <div class="plugged">
+                                Setosa: 10/(10+0) = <strong>1.00 (100%)</strong> | Versicolor: 9/(9+1) = <strong>0.900 (90%)</strong> | Virginica: 10/(10+0) = <strong>1.00 (100%)</strong>
+                            </div>
+                        </div>
+
+                        <!-- F1 Formula -->
+                        <div class="formula-card" style="border-left-color: var(--neon-purple);">
+                            <h4 style="color: var(--neon-purple);">3. F1-Score (Harmonic Mean)</h4>
+                            <div class="math">F₁ = 2 × (Precision × Recall) / (Precision + Recall)</div>
+                            <div class="plugged">
+                                Versicolor F₁: 2 × (1.00 × 0.90) / (1.00 + 0.90) = 1.80 / 1.90 = <strong>0.947 (95%)</strong>
+                            </div>
+                        </div>
+
+                        <!-- Classification Report Table -->
+                        <div>
+                            <span style="font-size:11px; color:var(--text-muted); font-family:'JetBrains Mono', monospace; text-transform:uppercase;">
+                                Scikit-Learn Classification Report (Test Set N=30):
+                            </span>
+                            <table class="metrics-table">
+                                <thead>
+                                    <tr>
+                                        <th>Class</th>
+                                        <th>Precision</th>
+                                        <th>Recall</th>
+                                        <th>F1-Score</th>
+                                        <th>Support</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><strong>Iris setosa</strong></td>
+                                        <td style="color:var(--neon-cyan);">1.00</td>
+                                        <td style="color:var(--neon-cyan);">1.00</td>
+                                        <td style="color:var(--neon-cyan); font-weight:700;">1.00</td>
+                                        <td>10</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Iris versicolor</strong></td>
+                                        <td style="color:var(--neon-violet);">1.00</td>
+                                        <td style="color:var(--neon-violet);">0.90</td>
+                                        <td style="color:var(--neon-violet); font-weight:700;">0.95</td>
+                                        <td>10</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Iris virginica</strong></td>
+                                        <td style="color:var(--neon-rose);">0.91</td>
+                                        <td style="color:var(--neon-rose);">1.00</td>
+                                        <td style="color:var(--neon-rose); font-weight:700;">0.95</td>
+                                        <td>10</td>
+                                    </tr>
+                                    <tr style="border-top: 1px solid var(--border-subtle); font-weight:700;">
+                                        <td>Accuracy / Macro Avg</td>
+                                        <td>0.97</td>
+                                        <td>0.97</td>
+                                        <td style="color:var(--neon-emerald);">0.967 (96.67%)</td>
+                                        <td>30</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- TAB 3: HIGH-RES DARK CHARTS -->
+            <div id="tabCharts" class="tab-content">
+                <div class="gallery-grid">
+                    <div class="gallery-item">
+                        <img src="{cm_b64}" alt="Dark Theme Confusion Matrix" class="gallery-img" onclick="openModal('modalCM')">
+                        <div class="gallery-cap">
+                            <strong>Figure 1.1: Multi-Class Confusion Matrix</strong> â€” Visualizing the 30 test samples evaluated against the trained multinomial logistic model. 29 out of 30 flowers are predicted with perfect precision.
+                        </div>
+                    </div>
+
+                    <div class="gallery-item">
+                        <img src="{fc_b64}" alt="Dark Theme Feature Clustering" class="gallery-img" onclick="openModal('modalFC')">
+                        <div class="gallery-cap">
+                            <strong>Figure 1.2: Morphological Feature Space Clustering</strong> â€” Dual projection showing Sepal Length vs Width and Petal Length vs Width with clear linear separation of Setosa.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 4: LECTURER ORAL DEFENSE GUIDE -->
+            <div id="tabDefense" class="tab-content">
+                <div class="defense-container">
+                    <div class="defense-card">
+                        <div class="defense-q">
+                            🎓 Q1: Why is Iris Setosa 100% linearly separable while Versicolor and Virginica overlap?
+                        </div>
+                        <div class="defense-a">
+                            <strong>Answer:</strong> <em>Iris setosa</em> possesses dwarf petals (length 1.0 – 1.9 cm, width 0.1 – 0.6 cm) that do not overlap with any other species in the dataset. Any linear hyperplane placed at Petal Length &lt; 2.5 cm achieves 100% separation with zero error. Conversely, <em>Versicolor</em> (petal length 3.0 – 5.1 cm) and <em>Virginica</em> (4.5 – 6.9 cm) share a borderline boundary between 4.5 and 5.1 cm, requiring a multi-dimensional softmax hyperplane to resolve.
+                        </div>
+                    </div>
+
+                    <div class="defense-card">
+                        <div class="defense-q">
+                            🎓 Q2: What is the anatomical difference between Sepals and Petals?
+                        </div>
+                        <div class="defense-a">
+                            <strong>Answer:</strong> In botanical terminology, the <strong>Sepals</strong> (calyx) are the three outer protective leaf-like structures (the drooping "falls"), whereas the <strong>Petals</strong> (corolla) are the three inner upright, colorful structures (the "standards"). In Fisher's dataset, Petal measurements provide vastly higher discriminatory information (variance ratio &gt; 80%) compared to Sepals.
+                        </div>
+                    </div>
+
+                    <div class="defense-card">
+                        <div class="defense-q">
+                            🎓 Q3: How does the model compute probabilities in real time?
+                        </div>
+                        <div class="defense-a">
+                            <strong>Answer:</strong> The model computes the linear logits <em>z<sub>k</sub> = w<sub>k</sub> · x + b<sub>k</sub></em> for each of the 3 classes. Then, the <strong>Softmax function</strong> exponentiates and normalizes these logits: <em>P(y = k | x) = exp(z<sub>k</sub>) / ∑ exp(z<sub>j</sub>)</em>. This converts raw continuous measurements into calibrated probability distributions summing to exactly 1.0 (100%).
+                        </div>
+                    </div>
+
+                    <div class="defense-card">
+                        <div class="defense-q">
+                            🎓 Q4: Why is F1-Score more reliable than Accuracy alone?
+                        </div>
+                        <div class="defense-a">
+                            <strong>Answer:</strong> Accuracy only measures total correct classifications over total samples. If a dataset has class imbalances, a naive model could predict only the majority class and appear accurate. The <strong>F1-Score</strong> is the harmonic mean of Precision and Recall; it heavily penalizes false positives and false negatives, ensuring balanced performance across every individual class.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Footer -->
+        <footer class="app-footer">
+            <div>
+                <strong>NEURAL-IRIS AI // Botanical Classification Engine</strong> &bull; Developed by <strong>Philip Antwi</strong> (PUIT24120002), Level 400 BSc Information Technology, Pentecost University.
+            </div>
+            <div class="footer-links">
+                <a href="https://github.com/Philipntwi-bot/Iris_Classification_Project" target="_blank">GitHub Repo</a>
+                <a href="https://iris-classification-project.vercel.app" target="_blank">Vercel App</a>
+                <a href="https://vercel.com/philipntwi-bot/iris-classification-project" target="_blank">Vercel Console</a>
+                <a href="https://archive.ics.uci.edu/dataset/53/iris" target="_blank">UCI Dataset</a>
+            </div>
+        </footer>
+
+    </div>
+
+    <!-- Modal for All Species Anatomy -->
+    <div id="modalAllSpecies" class="modal-overlay" onclick="closeModal('modalAllSpecies')">
+        <div class="modal-card" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h3 style="font-family:'Space Grotesk', sans-serif; font-size:16px; color:#fff;">
+                    Botanical Morphology & Anatomy: Iris Setosa vs Versicolor vs Virginica
+                </h3>
+                <button class="modal-close" onclick="closeModal('modalAllSpecies')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <img src="{b64_all}" alt="All Iris Species Morphology" onerror="this.src='image/iris_species_all.png'">
+            </div>
+            <div style="padding: 16px 20px; font-size: 13px; color: #94a3b8; line-height: 1.5;">
+                <strong>Anatomical Comparison:</strong> Notice the progressive elongation of the petals (standards) from Setosa (left, dwarfed) to Versicolor (center, intermediate) to Virginica (right, large robust standards).
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Confusion Matrix Zoom -->
+    <div id="modalCM" class="modal-overlay" onclick="closeModal('modalCM')">
+        <div class="modal-card" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h3 style="font-family:'Space Grotesk', sans-serif; font-size:16px; color:#fff;">
+                    Confusion Matrix (30 Test Samples) // High Resolution
+                </h3>
+                <button class="modal-close" onclick="closeModal('modalCM')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <img src="{cm_b64}" alt="Confusion Matrix Zoom">
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Feature Clustering Zoom -->
+    <div id="modalFC" class="modal-overlay" onclick="closeModal('modalFC')">
+        <div class="modal-card" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h3 style="font-family:'Space Grotesk', sans-serif; font-size:16px; color:#fff;">
+                    Feature Clustering Dual Projections // High Resolution
+                </h3>
+                <button class="modal-close" onclick="closeModal('modalFC')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <img src="{fc_b64}" alt="Feature Clustering Zoom">
+            </div>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT ENGINE -->
+    <script>
+        // Trained Model Parameters Embedded Directly for 100% Offline Zero-Latency Inference
+        const MODEL_COEF = {coef_json};
+        const MODEL_INTERCEPT = {intercept_json};
+        const DATASET_SAMPLES = {samples_json};
+        const SPECIES_STATS = {species_stats_json};
+        const SPECIES_NAMES = ["setosa", "versicolor", "virginica"];
+
+        // Image Base64 Mapping
+        const SPECIES_PHOTOS = {{
+            setosa: "{b64_setosa}",
+            versicolor: "{b64_versicolor}",
+            virginica: "{b64_virginica}"
+        }};
+
+        const SPECIES_NOTES = {{
+            setosa: "Dwarf compact petals linearly separable from all other species. Class F1: 1.00 (100%).",
+            versicolor: "Intermediate petal dimensions sharing a narrow margin with Virginica. Class F1: 0.95 (95%).",
+            virginica: "Robust, elongated petals representing the largest specimen in the dataset. Class F1: 0.95 (95%)."
+        }};
+
+        // Current Inputs State
+        let currentInputs = {{
+            sl: 5.8,
+            sw: 3.0,
+            pl: 4.3,
+            pw: 1.3
+        }};
+
+        // Scatter Plot State
+        let currentAxisMode = 'sepal'; // 'sepal', 'petal', 'combo'
+
+        // Initialize Dual Binding for Sensors
+        function initSensors() {{
+            const sensors = [
+                {{ key: 'sl', slider: 'slider_sl', num: 'input_sl', disp: 'display_sl', unit: 'cm' }},
+                {{ key: 'sw', slider: 'slider_sw', num: 'input_sw', disp: 'display_sw', unit: 'cm' }},
+                {{ key: 'pl', slider: 'slider_pl', num: 'input_pl', disp: 'display_pl', unit: 'cm' }},
+                {{ key: 'pw', slider: 'slider_pw', num: 'input_pw', disp: 'display_pw', unit: 'cm' }}
+            ];
+
+            sensors.forEach(s => {{
+                const sliderEl = document.getElementById(s.slider);
+                const numEl = document.getElementById(s.num);
+                const dispEl = document.getElementById(s.disp);
+
+                function update(val, isExternal) {{
+                    val = parseFloat(val);
+                    if (isNaN(val)) return;
+                    currentInputs[s.key] = val;
+
+                    if (!isExternal) {{
+                        sliderEl.value = val;
+                        numEl.value = val;
+                    }}
+                    dispEl.textContent = val.toFixed(1) + ' ' + s.unit;
+                    triggerInference(false);
+                }}
+
+                sliderEl.addEventListener('input', (e) => {{
+                    numEl.value = e.target.value;
+                    update(e.target.value, true);
+                }});
+
+                numEl.addEventListener('input', (e) => {{
+                    sliderEl.value = e.target.value;
+                    update(e.target.value, true);
+                }});
+            }});
+        }}
+
+        // Quick Preset Loader
+        function applyPreset(sl, sw, pl, pw) {{
+            currentInputs.sl = sl;
+            currentInputs.sw = sw;
+            currentInputs.pl = pl;
+            currentInputs.pw = pw;
+
+            document.getElementById('slider_sl').value = sl;
+            document.getElementById('input_sl').value = sl;
+            document.getElementById('display_sl').textContent = sl.toFixed(1) + ' cm';
+
+            document.getElementById('slider_sw').value = sw;
+            document.getElementById('input_sw').value = sw;
+            document.getElementById('display_sw').textContent = sw.toFixed(1) + ' cm';
+
+            document.getElementById('slider_pl').value = pl;
+            document.getElementById('input_pl').value = pl;
+            document.getElementById('display_pl').textContent = pl.toFixed(1) + ' cm';
+
+            document.getElementById('slider_pw').value = pw;
+            document.getElementById('input_pw').value = pw;
+            document.getElementById('display_pw').textContent = pw.toFixed(1) + ' cm';
+
+            triggerInference(true);
+        }}
+
+        // Random Sample from Dataset
+        function loadRandomSample() {{
+            const rand = DATASET_SAMPLES[Math.floor(Math.random() * DATASET_SAMPLES.length)];
+            applyPreset(rand.sl, rand.sw, rand.pl, rand.pw);
+        }}
+
+        // Client-side Multinomial Logistic Regression Softmax Engine
+        function computeSoftmax(sl, sw, pl, pw) {{
+            const x = [sl, sw, pl, pw];
+            const logits = [];
+
+            for (let c = 0; c < 3; c++) {{
+                let z = MODEL_INTERCEPT[c];
+                for (let f = 0; f < 4; f++) {{
+                    z += MODEL_COEF[c][f] * x[f];
+                }}
+                logits.push(z);
+            }}
+
+            // Numerically stable softmax
+            const maxLogit = Math.max(...logits);
+            const exps = logits.map(z => Math.exp(z - maxLogit));
+            const sumExp = exps.reduce((a, b) => a + b, 0);
+            const probs = exps.map(e => e / sumExp);
+
+            let bestClass = 0;
+            let bestProb = probs[0];
+            for (let c = 1; c < 3; c++) {{
+                if (probs[c] > bestProb) {{
+                    bestProb = probs[c];
+                    bestClass = c;
+                }}
+            }}
+
+            return {{
+                species: SPECIES_NAMES[bestClass],
+                classIndex: bestClass,
+                confidence: (bestProb * 100),
+                probabilities: {{
+                    setosa: (probs[0] * 100),
+                    versicolor: (probs[1] * 100),
+                    virginica: (probs[2] * 100)
+                }}
+            }};
+        }}
+
+        // Real-Time Inference Controller
+        function triggerInference(withCelebration) {{
+            const t0 = performance.now();
+            const result = computeSoftmax(currentInputs.sl, currentInputs.sw, currentInputs.pl, currentInputs.pw);
+            const t1 = performance.now();
+            const latency = (t1 - t0).toFixed(2);
+
+            // Update UI
+            const nameUpper = "IRIS " + result.species.toUpperCase();
+            document.getElementById('resultSpeciesName').textContent = nameUpper;
+            document.getElementById('resultConfidenceScore').textContent = result.confidence.toFixed(1) + "%";
+            document.getElementById('predLatency').textContent = "Edge Latency: " + latency + " ms";
+            document.getElementById('resultSpeciesNote').textContent = SPECIES_NOTES[result.species];
+
+            // Update Photo
+            const photoEl = document.getElementById('resultPhoto');
+            if (photoEl) {{
+                photoEl.src = SPECIES_PHOTOS[result.species];
+            }}
+
+            // Update Probabilities Bars
+            const pSetosa = result.probabilities.setosa.toFixed(1);
+            const pVersi = result.probabilities.versicolor.toFixed(1);
+            const pVirgi = result.probabilities.virginica.toFixed(1);
+
+            document.getElementById('probValSetosa').textContent = pSetosa + "%";
+            document.getElementById('probFillSetosa').style.width = Math.max(0.5, pSetosa) + "%";
+
+            document.getElementById('probValVersicolor').textContent = pVersi + "%";
+            document.getElementById('probFillVersicolor').style.width = Math.max(0.5, pVersi) + "%";
+
+            document.getElementById('probValVirginica').textContent = pVirgi + "%";
+            document.getElementById('probFillVirginica').style.width = Math.max(0.5, pVirgi) + "%";
+
+            // Update Telemetry
+            const f1Map = {{ setosa: "1.00 (100%)", versicolor: "0.95 (95%)", virginica: "0.95 (95%)" }};
+            document.getElementById('teleClassF1').textContent = f1Map[result.species];
+            document.getElementById('teleTensor').textContent = `[${{currentInputs.sl.toFixed(1)}}, ${{currentInputs.sw.toFixed(1)}}, ${{currentInputs.pl.toFixed(1)}}, ${{currentInputs.pw.toFixed(1)}}]`;
+
+            // Draw Scatter Plot with Live Cursor
+            drawScatter();
+
+            // Trigger Confetti on explicit user click if confidence > 95%
+            if (withCelebration && result.confidence > 95 && typeof confetti === 'function') {{
+                confetti({{
+                    particleCount: 50,
+                    spread: 60,
+                    origin: {{ y: 0.65 }},
+                    colors: result.species === 'setosa' ? ['#06b6d4', '#22d3ee'] : result.species === 'versicolor' ? ['#8b5cf6', '#a855f7'] : ['#ec4899', '#f43f5e']
+                }});
+            }}
+        }}
+
+        // Tabs Switcher
+        function switchTab(tabId) {{
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+
+            event.currentTarget.classList.add('active');
+            const target = document.getElementById(tabId);
+            if (target) {{
+                target.classList.add('active');
+                if (tabId === 'tabScatter') {{
+                    setTimeout(drawScatter, 50);
+                }}
+            }}
+        }}
+
+        // Scatter Plot Axis Switcher
+        function setScatterAxes(mode) {{
+            currentAxisMode = mode;
+            document.getElementById('btnAxisSepal').classList.toggle('active', mode === 'sepal');
+            document.getElementById('btnAxisPetal').classList.toggle('active', mode === 'petal');
+            document.getElementById('btnAxisCombo').classList.toggle('active', mode === 'combo');
+            drawScatter();
+        }}
+
+        // Interactive HTML5 Canvas Scatter Plot
+        function drawScatter() {{
+            const canvas = document.getElementById('scatterCanvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+
+            // Handle retina displays
+            const rect = canvas.getBoundingClientRect();
+            canvas.width = rect.width * window.devicePixelRatio;
+            canvas.height = rect.height * window.devicePixelRatio;
+            ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+
+            const width = rect.width;
+            const height = rect.height;
+
+            // Determine Axis mapping
+            let xKey = 'sl', yKey = 'sw';
+            let xLabel = 'Sepal Length (cm)', yLabel = 'Sepal Width (cm)';
+            let xMin = 4.0, xMax = 8.0, yMin = 2.0, yMax = 4.5;
+
+            if (currentAxisMode === 'petal') {{
+                xKey = 'pl'; yKey = 'pw';
+                xLabel = 'Petal Length (cm)'; yLabel = 'Petal Width (cm)';
+                xMin = 1.0; xMax = 7.0; yMin = 0.1; yMax = 2.6;
+            }} else if (currentAxisMode === 'combo') {{
+                xKey = 'sl'; yKey = 'pl';
+                xLabel = 'Sepal Length (cm)'; yLabel = 'Petal Length (cm)';
+                xMin = 4.0; xMax = 8.0; yMin = 1.0; yMax = 7.0;
+            }}
+
+            const padLeft = 60, padBottom = 50, padTop = 30, padRight = 30;
+            const plotW = width - padLeft - padRight;
+            const plotH = height - padTop - padBottom;
+
+            function toScreenX(val) {{
+                return padLeft + ((val - xMin) / (xMax - xMin)) * plotW;
+            }}
+            function toScreenY(val) {{
+                return padTop + plotH - ((val - yMin) / (yMax - yMin)) * plotH;
+            }}
+
+            // Clear Background
+            ctx.fillStyle = '#090d16';
+            ctx.fillRect(0, 0, width, height);
+
+            // Draw Grid lines
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+            ctx.lineWidth = 1;
+            const xSteps = 8, ySteps = 6;
+
+            for (let i = 0; i <= xSteps; i++) {{
+                const xVal = xMin + (i / xSteps) * (xMax - xMin);
+                const sx = toScreenX(xVal);
+                ctx.beginPath();
+                ctx.moveTo(sx, padTop);
+                ctx.lineTo(sx, padTop + plotH);
+                ctx.stroke();
+
+                ctx.fillStyle = '#64748b';
+                ctx.font = '10px "JetBrains Mono", monospace';
+                ctx.textAlign = 'center';
+                ctx.fillText(xVal.toFixed(1), sx, padTop + plotH + 16);
+            }}
+
+            for (let i = 0; i <= ySteps; i++) {{
+                const yVal = yMin + (i / ySteps) * (yMax - yMin);
+                const sy = toScreenY(yVal);
+                ctx.beginPath();
+                ctx.moveTo(padLeft, sy);
+                ctx.lineTo(padLeft + plotW, sy);
+                ctx.stroke();
+
+                ctx.fillStyle = '#64748b';
+                ctx.font = '10px "JetBrains Mono", monospace';
+                ctx.textAlign = 'right';
+                ctx.fillText(yVal.toFixed(1), padLeft - 10, sy + 3);
+            }}
+
+            // Draw Axis Labels
+            ctx.fillStyle = '#94a3b8';
+            ctx.font = '12px "Space Grotesk", sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText(xLabel, padLeft + plotW / 2, height - 12);
+
+            ctx.save();
+            ctx.translate(18, padTop + plotH / 2);
+            ctx.rotate(-Math.PI / 2);
+            ctx.fillText(yLabel, 0, 0);
+            ctx.restore();
+
+            // Colors
+            const colorMap = ['#06b6d4', '#8b5cf6', '#ec4899'];
+
+            // Plot all 150 points
+            DATASET_SAMPLES.forEach(pt => {{
+                const sx = toScreenX(pt[xKey]);
+                const sy = toScreenY(pt[yKey]);
+                ctx.fillStyle = colorMap[pt.species];
+                ctx.beginPath();
+                ctx.arc(sx, sy, 4.5, 0, Math.PI * 2);
+                ctx.fill();
+            }});
+
+            // Plot Live User Point (Target)
+            const liveX = currentInputs[xKey];
+            const liveY = currentInputs[yKey];
+            const liveSx = toScreenX(liveX);
+            const liveSy = toScreenY(liveY);
+
+            // Pulsing Outer Aura
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(liveSx, liveSy, 18, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(245, 158, 11, 0.25)';
+            ctx.fill();
+
+            ctx.beginPath();
+            ctx.arc(liveSx, liveSy, 10, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(245, 158, 11, 0.6)';
+            ctx.fill();
+
+            // Inner Center
+            ctx.beginPath();
+            ctx.arc(liveSx, liveSy, 5, 0, Math.PI * 2);
+            ctx.fillStyle = '#ffffff';
+            ctx.fill();
+
+            // Crosshair lines
+            ctx.strokeStyle = '#f59e0b';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.moveTo(liveSx - 24, liveSy);
+            ctx.lineTo(liveSx + 24, liveSy);
+            ctx.moveTo(liveSx, liveSy - 24);
+            ctx.lineTo(liveSx, liveSy + 24);
+            ctx.stroke();
+
+            // Label
+            ctx.fillStyle = '#f59e0b';
+            ctx.font = 'bold 11px "JetBrains Mono", monospace';
+            ctx.textAlign = 'left';
+            ctx.fillText(`🎯 YOUR SAMPLE [${{liveX.toFixed(1)}}, ${{liveY.toFixed(1)}}]`, liveSx + 14, liveSy - 14);
+            ctx.restore();
+        }}
+
+        // Confusion Matrix Cell Inspector
+        function inspectCell(actual, pred, count, type) {{
+            const inspector = document.getElementById('cellInspector');
+            const actName = "Iris " + actual;
+            const predName = "Iris " + pred;
+
+            let html = `<strong>Cell Focus:</strong> Actual = <span style="color:#38bdf8;">${{actName}}</span> | Predicted = <span style="color:#c084fc;">${{predName}}</span> &bull; <strong>Count: ${{count}}</strong> samples.<br>`;
+
+            if (type === 'TP') {{
+                html += `<span style="color:#22c55e;">✔ TRUE POSITIVE (TP):</span> The classifier correctly identified all ${{count}} ${{actName}} flowers. Contributes directly to 100% sensitivity for this class.`;
+            }} else if (type === 'FP_FN') {{
+                html += `<span style="color:#f43f5e;">⚠ MISCLASSIFICATION:</span> 1 actual ${{actName}} sample had borderline elongated petals and was predicted as ${{predName}}. This accounts for the 90% recall of Versicolor and 90.9% precision of Virginica.`;
+            }} else {{
+                html += `<span style="color:#94a3b8;">✔ ZERO ERROR:</span> No ${{actName}} specimens were erroneously classified into ${{predName}}.`;
+            }}
+
+            inspector.innerHTML = html;
+        }}
+
+        // Modal Helpers
+        function openModal(id) {{
+            const el = document.getElementById(id);
+            if (el) el.style.display = 'flex';
+        }}
+        function closeModal(id) {{
+            const el = document.getElementById(id);
+            if (el) el.style.display = 'none';
+        }}
+
+        // Interactive Particle Background
+        function initParticles() {{
+            const canvas = document.getElementById('particleCanvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+
+            function resize() {{
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            }}
+            window.addEventListener('resize', resize);
+            resize();
+
+            const particles = [];
+            const count = 45;
+            for (let i = 0; i < count; i++) {{
+                particles.push({{
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    vx: (Math.random() - 0.5) * 0.4,
+                    vy: (Math.random() - 0.5) * 0.4,
+                    radius: Math.random() * 2 + 1,
+                    color: i % 3 === 0 ? 'rgba(6, 182, 212, 0.4)' : i % 3 === 1 ? 'rgba(139, 92, 246, 0.4)' : 'rgba(236, 72, 153, 0.3)'
+                }});
+            }}
+
+            function loop() {{
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                for (let p of particles) {{
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    if (p.x < 0) p.x = canvas.width;
+                    if (p.x > canvas.width) p.x = 0;
+                    if (p.y < 0) p.y = canvas.height;
+                    if (p.y > canvas.height) p.y = 0;
+
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                    ctx.fillStyle = p.color;
+                    ctx.fill();
+                }}
+                requestAnimationFrame(loop);
+            }}
+            loop();
+        }}
+
+        // On Page Load
+        window.addEventListener('DOMContentLoaded', () => {{
+            initSensors();
+            initParticles();
+            triggerInference(false);
+            window.addEventListener('resize', drawScatter);
+        }});
+    </script>
+</body>
+</html>
+"""
+
+# Write to index.html
+with open(ROOT_DIR / "index.html", "w", encoding="utf-8") as f:
+    f.write(html_content)
+
+print(f"SUCCESS: index.html written ({len(html_content)} bytes)!")
